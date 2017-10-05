@@ -27,7 +27,9 @@ def getKillsDaily():
 def xache():
     if mc.get('test'):
         ll = mc.get('test')
-        return 'True'+ ll
+        resp = flask.Response('True'+ll)
+        resp.headers['X-Something'] = 'Test Value'
+        return resp
     elif not mc.get('test'):
         t = test.help()
         return 'False'+t
@@ -36,7 +38,8 @@ def xache():
 
 @easi.errorhandler(404)
 def notfound(error):
-    return 'This is not the page you are looking for.'
+
+    return 'This is not the page you are looking for.', 404
 
 if __name__ == "__main__":
     easi.run()
