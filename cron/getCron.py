@@ -4,6 +4,9 @@ import requests
 import re
 import json
 import os.path
+import memcache
+
+mc = memcache.Client(['127.0.0.1:11211'], debug=0)
 
 app_dir = os.path.abspath(os.path.join(os.path.dirname(__file__),'..'))
 sde_path = database_path = os.path.join(app_dir, 'sde.db')
@@ -18,7 +21,7 @@ regg = '[Jj]([0-9]{6})'
 conn = sql.connect(sde_path)
 conn.create_function("regexp", 2, regexp)
 c = conn.cursor()
-c.execute("SELECT solarSystemID from mapSolarSystems WHERE solarSystemName NOT regexp :pattern", {'pattern': regg})
+c.execute("SELECT solarSystemID from mapSolarSystems WHERE solarSystemName NOT LIKE 'Thera' OR regexp :pattern", {'pattern': regg})
 sysids = c.fetchall()
 print(len(sysids))
 conn.close()
@@ -42,7 +45,9 @@ for x in kills:
     kids.append(sys)
 
 for sysid in sysids:
-    if sysid[0] not in kids:
+    if sysid[0] == 31000005:
+        pass
+    elif sysid[0] not in kids:
         ktotal.append((sysid[0], 0, 0, 0, time))
     else:
         pass
@@ -77,3 +82,5 @@ conn.commit()
 conn.close()
 print(time)
 print("Database updated")
+
+#Here is where the code that will cache the DB response for the rolling endpoints.
