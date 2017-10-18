@@ -1,45 +1,39 @@
-import sqlite3 as sql
 import flask
 import memcache
 from flask import abort, redirect, url_for
 from flask import render_template
-from flask import Flask
+from flask import Flask, Blueprint
 import cron.test as test
+import json
+from flask_restplus import Resource, Api, fields
 
 easi = Flask(__name__)
+api_p = Blueprint('api', __name__,  url_prefix='/api')
+api = Api(api_p, version='1.0', title='EVE Aggregate Statistics Interface', description='Aggregate Statistics gathered from ESI.',)
 
 mc = memcache.Client(['127.0.0.1:11211'], debug=0)
 
+kills = api.namespace("kills", description="Kill stats")
+
 @easi.route('/')
-def index():
-    return render_template('index.html')
+def doc():
+    return redirect(url_for('api.doc'))
 
-@easi.route('/api')
-def api():
-    return redirect(url_for('index'))
+@kills.route('/killsDaily')
+class KillsDaily(Resource):
+    def get(self):
+            res = json.dumps(mc.get("killsDaily"))
+            exp = mc.get("dailyExp")
+            result = flask.Response(res)
+            result.headers['expires'] = mc.get("dailyExp")
+            result.headers['content-type'] = "application/json"
+            return result
 
-@easi.route('/api/killsDaily/')
-def getKillsDaily():
-    result = test.help()
-    return result
-
-@easi.route('/l')
-def xache():
-    if mc.get('test'):
-        ll = mc.get('test')
-        resp = flask.Response('True'+ll)
-        resp.headers['X-Something'] = 'Test Value'
-        return resp
-    elif not mc.get('test'):
-        t = test.help()
-        return 'False'+t
-    else:
-        return 'Error'
-
-@easi.errorhandler(404)
-def notfound(error):
-
-    return 'This is not the page you are looking for.', 404
+@api.route('/hello')
+class HelloWorld(Resource):
+    def get(self):
+        return {'hello': 'world'}
 
 if __name__ == "__main__":
-    easi.run()
+    easi.register_blueprint(api_p)
+    easi.run(debug=True)

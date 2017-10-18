@@ -21,7 +21,7 @@ regg = '[Jj]([0-9]{6})'
 conn = sql.connect(sde_path)
 conn.create_function("regexp", 2, regexp)
 c = conn.cursor()
-c.execute("SELECT solarSystemID from mapSolarSystems WHERE solarSystemName NOT LIKE 'Thera' OR regexp :pattern", {'pattern': regg})
+c.execute("SELECT solarSystemID from mapSolarSystems WHERE solarSystemName NOT regexp :pattern", {'pattern': regg})
 sysids = c.fetchall()
 print(len(sysids))
 conn.close()
